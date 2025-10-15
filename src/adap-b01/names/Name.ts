@@ -21,7 +21,7 @@ export class Name {
    * @methodtype initialization-method
    */
   constructor(other: string[], delimiter?: string) {
-    this.components = other;
+    this.components = [...other];
     if (delimiter) {
       this.delimiter = delimiter;
     }
@@ -80,7 +80,7 @@ export class Name {
    */
   public setComponent(i: number, c: string): void {
     this.assertIsValidIndex(i);
-    this.assertIsNotDefined(c);
+    this.assertIsDefined(c);
     this.components[i] = c;
   }
 
@@ -96,7 +96,7 @@ export class Name {
    */
   public insert(i: number, c: string): void {
     this.assertIsValidIndex(i, true); // allowEnd = true for insert
-    this.assertIsNotDefined(c);
+    this.assertIsDefined(c);
     this.components.splice(i, 0, c);
   }
 
@@ -104,7 +104,7 @@ export class Name {
    * @methodtype command-method
    */
   public append(c: string): void {
-    this.assertIsNotDefined(c);
+    this.assertIsDefined(c);
     this.components.push(c);
   }
 
@@ -134,7 +134,7 @@ export class Name {
    * Asserts that component is not null or undefined
    * @methodtype assertion-method
    */
-  protected assertIsNotDefined(component: string): void {
+  protected assertIsDefined(component: string): void {
     if (component === undefined || component === null) {
       throw new Error("Component cannot be null or undefined");
     }
