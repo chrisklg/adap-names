@@ -21,13 +21,15 @@ export class Name {
    * @methodtype initialization-method
    */
   constructor(other: string[], delimiter?: string) {
-    this.components = [...other];
-    if (delimiter) {
+    if (delimiter !== undefined) {
+      this.assertValidDelimiter(delimiter);
       this.delimiter = delimiter;
     }
+    this.components = [...other];
     if (this.getNoComponents() === 0) {
       throw new Error("Components not initialized");
     }
+    this.assertComponentsProperlyMasked();
   }
 
   /**
@@ -81,6 +83,7 @@ export class Name {
   public setComponent(i: number, c: string): void {
     this.assertIsValidIndex(i);
     this.assertIsDefined(c);
+    this.assertComponentProperlyMasked(c);
     this.components[i] = c;
   }
 
@@ -92,32 +95,95 @@ export class Name {
   }
 
   /** Expects that new Name component c is properly masked
-   * @methodtype command-method
+   * @methodtype set-method
    */
   public insert(i: number, c: string): void {
-    this.assertIsValidIndex(i, true); // allowEnd = true for insert
+    this.assertIsValidIndex(i, true);
     this.assertIsDefined(c);
+    this.assertComponentProperlyMasked(c);
     this.components.splice(i, 0, c);
   }
 
   /** Expects that new Name component c is properly masked
-   * @methodtype command-method
+   * @methodtype set-method
    */
   public append(c: string): void {
     this.assertIsDefined(c);
+    this.assertComponentProperlyMasked(c);
     this.components.push(c);
   }
 
   /**
    * Removes component at position i
-   * @methodtype command-method
+   * @methodtype set-method
    */
   public remove(i: number): void {
     this.assertIsValidIndex(i);
     this.components.splice(i, 1);
   }
 
-  // ========== Additional Helper Methods ==========
+  // ========== Validation Methods ==========
+
+  /**
+   * Validates that the delimiter is exactly one character and not the escape character
+   * @methodtype assertion-method
+   */
+  private assertValidDelimiter(delimiter: string): void {
+    if (delimiter.length !== 1) {
+      throw new Error("Delimiter must be exactly one character");
+    }
+    if (delimiter === ESCAPE_CHARACTER) {
+      throw new Error("Delimiter cannot be the escape character");
+    }
+  }
+
+  /**
+   * Validates that all components in the array are properly masked
+   * @methodtype assertion-method
+   */
+  private assertComponentsProperlyMasked(): void {
+    for (let i = 0; i < this.components.length; i++) {
+      try {
+        this.assertComponentProperlyMasked(this.components[i]);
+      } catch (error) {
+        throw new Error(
+          `Component at index ${i} is not properly masked: ${this.components[i]}`
+        );
+      }
+    }
+  }
+
+  /**
+   * Validates that a single component is properly masked
+   * Checks for:
+   * 1. No unescaped delimiters
+   * 2. No trailing escape characters
+   * 3. Valid escape sequences
+   * @methodtype assertion-method
+   */
+  private assertComponentProperlyMasked(component: string): void {
+    let i = 0;
+    while (i < component.length) {
+      if (component[i] === ESCAPE_CHARACTER) {
+        // Escape character must be followed by another character
+        if (i + 1 >= component.length) {
+          throw new Error(
+            "Invalid escape sequence: escape character at end of component"
+          );
+        }
+        // Skip the escaped character
+        i += 2;
+      } else if (component[i] === this.delimiter) {
+        // Found unescaped delimiter
+        throw new Error(
+          `Component contains unescaped delimiter '${this.delimiter}': ${component}`
+        );
+      } else {
+        // Regular character
+        i++;
+      }
+    }
+  }
 
   /**
    * Asserts that index i is valid for the components array
@@ -140,25 +206,50 @@ export class Name {
     }
   }
 
+  // ========== Masking Helper Methods ==========
+
   /**
    * Removes escape characters from a masked component
-   * @methodtype helper-method
+   * @methodtype primitive-method
    */
   protected doUnmask(component: string): string {
-    return component.replace(new RegExp(`\\${ESCAPE_CHARACTER}(.)`, "g"), "$1");
+    let result = "";
+    let i = 0;
+
+    while (i < component.length) {
+      if (component[i] === ESCAPE_CHARACTER && i + 1 < component.length) {
+        // Escape sequence ... add only the escaped character
+        result += component[i + 1];
+        i += 2;
+      } else {
+        result += component[i];
+        i++;
+      }
+    }
+
+    return result;
   }
 
   /**
    * Adds escape characters to mask special characters in a component
-   * @methodtype helper-method
+   * @methodtype primitive-method
    */
   protected doMask(
     component: string,
-    delimiter: string = DEFAULT_DELIMITER
+    delimiter: string = this.delimiter
   ): string {
-    return component.replace(
-      new RegExp(`[\\${ESCAPE_CHARACTER}\\${delimiter}]`, "g"),
-      `${ESCAPE_CHARACTER}$&`
-    );
+    let result = "";
+
+    for (let i = 0; i < component.length; i++) {
+      const char = component[i];
+      // Escape the delimiter or the escape character itself
+      if (char === delimiter || char === ESCAPE_CHARACTER) {
+        result += ESCAPE_CHARACTER + char;
+      } else {
+        result += char;
+      }
+    }
+
+    return result;
   }
 }
