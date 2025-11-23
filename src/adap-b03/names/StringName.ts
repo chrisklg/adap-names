@@ -39,19 +39,19 @@ export class StringName extends AbstractName {
 
     protected doSetComponent(i: number, c: string): void {
         const components = this.parseComponents();
-        components[i] = this.escapeComponent(c);
+        components[i] = c;
         this.name = components.join(this.delimiter);
     }
 
     protected doInsert(i: number, c: string): void {
         const components = this.parseComponents();
-        components.splice(i, 0, this.escapeComponent(c));
+        components.splice(i, 0, c);
         this.name = components.join(this.delimiter);
         this.noComponents = components.length;
     }
 
     protected doAppend(c: string): void {
-        const escaped = this.escapeComponent(c);
+        const escaped = c;
         if (this.noComponents === 0) {
             this.name = escaped;
         } else {
@@ -65,18 +65,6 @@ export class StringName extends AbstractName {
         components.splice(i, 1);
         this.name = components.join(this.delimiter);
         this.noComponents = components.length;
-    }
-
-    protected escapeComponent(component: string): string {
-        return component
-            .replace(
-                new RegExp(`\\${ESCAPE_CHARACTER}`, "g"),
-                ESCAPE_CHARACTER + ESCAPE_CHARACTER
-            )
-            .replace(
-                new RegExp(`\\${this.delimiter}`, "g"),
-                ESCAPE_CHARACTER + this.delimiter
-            );
     }
 
     protected parseComponents(): string[] {
