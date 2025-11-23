@@ -11,7 +11,7 @@ export class StringName extends AbstractName {
         this.initialize(source, delimiter);
     }
 
-    public initialize(source: string, delimiter?: string): void {
+    private initialize(source: string, delimiter?: string): void {
         this.name = source;
         if (delimiter !== undefined) {
             this.assertValidDelimiter(delimiter);
@@ -39,22 +39,23 @@ export class StringName extends AbstractName {
 
     protected doSetComponent(i: number, c: string): void {
         const components = this.parseComponents();
-        components[i] = c;
+        components[i] = this.escapeComponent(c);
         this.name = components.join(this.delimiter);
     }
 
     protected doInsert(i: number, c: string): void {
         const components = this.parseComponents();
-        components.splice(i, 0, c);
+        components.splice(i, 0, this.escapeComponent(c));
         this.name = components.join(this.delimiter);
         this.noComponents = components.length;
     }
 
     protected doAppend(c: string): void {
+        const escaped = this.escapeComponent(c);
         if (this.noComponents === 0) {
-            this.name = c;
+            this.name = escaped;
         } else {
-            this.name += this.delimiter + c;
+            this.name += this.delimiter + escaped;
         }
         this.noComponents++;
     }
@@ -64,6 +65,18 @@ export class StringName extends AbstractName {
         components.splice(i, 1);
         this.name = components.join(this.delimiter);
         this.noComponents = components.length;
+    }
+
+    protected escapeComponent(component: string): string {
+        return component
+            .replace(
+                new RegExp(`\\${ESCAPE_CHARACTER}`, "g"),
+                ESCAPE_CHARACTER + ESCAPE_CHARACTER
+            )
+            .replace(
+                new RegExp(`\\${this.delimiter}`, "g"),
+                ESCAPE_CHARACTER + this.delimiter
+            );
     }
 
     protected parseComponents(): string[] {

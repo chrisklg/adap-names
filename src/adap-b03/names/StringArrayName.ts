@@ -11,7 +11,7 @@ export class StringArrayName extends AbstractName {
         this.initialize(source, delimiter);
     }
 
-    public initialize(source: string[], delimiter?: string): void {
+    private initialize(source: string[], delimiter?: string): void {
         if (delimiter !== undefined) {
             this.assertValidDelimiter(delimiter);
             this.delimiter = delimiter;

@@ -166,9 +166,13 @@ export abstract class AbstractName implements Name {
     }
 
     protected assertIsValidIndex(i: number, allowEnd: boolean = false): void {
+        const count = this.getNoComponents();
+        if (count === 0 && !allowEnd) {
+            throw new Error(`Index ${i} out of bounds: collection is empty`);
+        }
         const max = allowEnd
-            ? this.getNoComponents()
-            : this.getNoComponents() - 1;
+            ? count
+            : count - 1;
         if (i < 0 || i > max) {
             throw new Error(`Index ${i} out of bounds [0, ${max}]`);
         }
