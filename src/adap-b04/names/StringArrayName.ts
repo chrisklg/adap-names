@@ -1,69 +1,110 @@
 import { DEFAULT_DELIMITER, ESCAPE_CHARACTER } from "../common/Printable";
 import { Name } from "./Name";
 import { AbstractName } from "./AbstractName";
+import { IllegalArgumentException } from "../common/IllegalArgumentException";
 
 export class StringArrayName extends AbstractName {
-
     protected components: string[] = [];
 
     constructor(source: string[], delimiter?: string) {
-        super();
-        throw new Error("needs implementation or deletion");
+        super(delimiter);
+
+        this.initialize(source);
+
+        this.assertClassInvariants();
     }
 
-    public clone(): Name {
-        throw new Error("needs implementation or deletion");
+    /**
+     * PRECONDITIONS (enforced by this method):
+     * 1. Source must not be null or undefined
+     * 2. Source must contain at least one component
+     * 3. All components must be properly masked
+     */
+    private initialize(source: string[]): void {
+        // PRECONDITION 1: Source must not be null or undefined
+        IllegalArgumentException.assert(
+            source != null && source != undefined,
+            "source must not be null or undefined"
+        );
+
+        // PRECONDITION 2: Source must have at least one component
+        IllegalArgumentException.assert(
+            source.length > 0,
+            "source must contain at least one component"
+        );
+
+        this.components = [...source];
+
+        // PRECONDITION
+        for (let i = 0; i < this.components.length; i++) {
+            this.assertComponentProperlyMasked(this.components[i]);
+        }
     }
 
-    public asString(delimiter: string = this.delimiter): string {
-        throw new Error("needs implementation or deletion");
+    /**
+     * @returns New StringArrayName that equals this one
+     */
+    protected doClone(): Name {
+        return new StringArrayName(this.components, this.delimiter);
     }
 
-    public asDataString(): string {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public isEqual(other: Name): boolean {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public getHashCode(): number {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public isEmpty(): boolean {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public getDelimiterCharacter(): string {
-        throw new Error("needs implementation or deletion");
-    }
-
+    /**
+     * @returns Number of components (always >= 0)
+     */
     public getNoComponents(): number {
-        throw new Error("needs implementation or deletion");
+        return this.components.length;
     }
 
-    public getComponent(i: number): string {
-        throw new Error("needs implementation or deletion");
+    /**
+     * PRECONDITION:
+     * - Index must be valid (>= 0 and < component count)
+     * @param i - Index of component to retrieve
+     * @returns The component string at index i
+     */
+    protected doGetComponent(i: number): string {
+        return this.components[i];
     }
 
-    public setComponent(i: number, c: string) {
-        throw new Error("needs implementation or deletion");
+    /**
+     * PRECONDITIONS:
+     * - Index must be valid
+     * - Component must not be null/undefined
+     * - Component must be properly masked
+     * @param i - Index where to set the component
+     * @param c - The new component value (properly masked)
+     */
+    protected doSetComponent(i: number, c: string): void {
+        this.components[i] = c;
     }
 
-    public insert(i: number, c: string) {
-        throw new Error("needs implementation or deletion");
+    /**
+     * PRECONDITIONS:
+     * - Index must be valid (can be == length for append)
+     * - Component must not be null/undefined
+     * - Component must be properly masked
+     * @param i - Index where to insert
+     * @param c - Component to insert
+     */
+    protected doInsert(i: number, c: string): void {
+        this.components.splice(i, 0, c);
     }
 
-    public append(c: string) {
-        throw new Error("needs implementation or deletion");
+    /**
+     * PRECONDITIONS:
+     * - Component must not be null/undefined
+     * - Component must be properly masked
+     * @param c - Component to append
+     */
+    protected doAppend(c: string): void {
+        this.components.push(c);
     }
 
-    public remove(i: number) {
-        throw new Error("needs implementation or deletion");
-    }
-
-    public concat(other: Name): void {
-        throw new Error("needs implementation or deletion");
+    /**
+     * PRECONDITION:
+     * - Index must be valid
+     * @param i - Index of component to remove
+     */
+    protected doRemove(i: number): void {
+        this.components.splice(i, 1);
     }
 }
