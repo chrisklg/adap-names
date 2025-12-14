@@ -3,6 +3,6 @@ export interface Cloneable {
     /**
      * Returns shallow copy (clone) of this object
      */
-    clone(): this;
+    clone(): Cloneable;
 
 }
